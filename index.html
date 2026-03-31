@@ -4,333 +4,264 @@ html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Token Validation</title>
+    <title>Modern Business Solutions</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3b82f6',
-                        secondary: '#1e40af'
-                    }
-                }
-            }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .active-tab {
+            border-bottom: 3px solid #3b82f6;
+            color: #3b82f6;
         }
-    </script>
+        .page-transition {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .page-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
-        <!-- Login Form -->
-        <div id="loginForm">
-            <div class="text-center">
-                <h2 class="mt-6 text-3xl font-bold text-gray-900">Sign in to your account</h2>
-                <p class="mt-2 text-sm text-gray-600">Enter your credentials to continue</p>
-            </div>
-            <form class="mt-8 space-y-6" id="loginFormElement">
-                <div class="rounded-md shadow-sm space-y-4">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-                        <input id="email" name="email" type="email" autocomplete="email" required 
-                               class="appearance-none relative block w-full px-3 py-2 border border-gray-300 
-                                      placeholder-gray-500 text-gray-900 rounded-md focus:outline-none 
-                                      focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                               placeholder="Enter your email">
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input id="password" name="password" type="password" autocomplete="current-password" required 
-                               class="appearance-none relative block w-full px-3 py-2 border border-gray-300 
-                                      placeholder-gray-500 text-gray-900 rounded-md focus:outline-none 
-                                      focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                               placeholder="Enter your password">
-                    </div>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <i class="fas fa-rocket text-blue-600 text-2xl mr-2"></i>
+                    <span class="text-xl font-bold text-gray-800">Nexus Solutions</span>
                 </div>
-
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input id="remember-me" name="remember-me" type="checkbox" 
-                               class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                        <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
-                    </div>
-                    <div class="text-sm">
-                        <a href="#" class="font-medium text-primary hover:text-secondary">Forgot password?</a>
-                    </div>
-                </div>
-
-                <div>
-                    <button type="submit" 
-                            class="group relative w-full flex justify-center py-2 px-4 border border-transparent 
-                                   text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary 
-                                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        Sign in
-                    </button>
-                </div>
-            </form>
-            
-            <div class="mt-6">
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white text-gray-500">Or continue with</span>
-                    </div>
-                </div>
-                <div class="mt-6 grid grid-cols-2 gap-3">
-                    <button type="button" 
-                            class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 
-                                   rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 
-                                   hover:bg-gray-50">
-                        Google
-                    </button>
-                    <button type="button" 
-                            class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 
-                                   rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 
-                                   hover:bg-gray-50">
-                        GitHub
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loadingState" class="hidden text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p class="mt-4 text-gray-600">Validating token...</p>
-        </div>
-
-        <!-- Dashboard (Visible after successful login) -->
-        <div id="dashboard" class="hidden">
-            <div class="text-center">
-                <h2 class="text-3xl font-bold text-gray-900">Welcome to Dashboard</h2>
-                <p class="mt-2 text-sm text-gray-600">You have successfully logged in</p>
-            </div>
-            <div class="mt-8 space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="font-medium text-gray-900">User Information</h3>
-                    <p class="text-sm text-gray-600 mt-1" id="userEmail">Email: loading...</p>
-                    <p class="text-sm text-gray-600" id="tokenStatus">Token Status: Valid</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="refreshToken()" 
-                            class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm 
-                                   font-medium text-white bg-green-600 hover:bg-green-700">
-                        Refresh Token
-                    </button>
-                    <button onclick="logout()" 
-                            class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm 
-                                   font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Logout
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Error Message -->
-        <div id="errorMessage" class="hidden p-4 bg-red-50 border border-red-200 rounded-md">
-            <p class="text-red-800 text-sm" id="errorText"></p>
-        </div>
-    </div>
-
-    <script>
-        // Check for existing token on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('authToken');
-            if (token) {
-                validateToken(token);
-            }
-        });
-
-        // Handle login form submission
-        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            showLoading();
-            
-            try {
-                // Simulate API call to backend login endpoint
-                const response = await mockLoginAPI(email, password);
                 
-                if (response.success) {
-                    // Store token in localStorage
-                    localStorage.setItem('authToken', response.token);
-                    localStorage.setItem('userEmail', email);
+                <div class="hidden md:flex space-x-8">
+                    <button id="home-tab" class="font-medium text-gray-700 hover:text-blue-600 py-2 px-1 active-tab">Home</button>
+                    <button id="about-tab" class="font-medium text-gray-700 hover:text-blue-600 py-2 px-1">About Us</button>
+                    <button id="services-tab" class="font-medium text-gray-700 hover:text-blue-600 py-2 px-1">Services</button>
+                </div>
+                
+                <button class="md:hidden text-gray-700 focus:outline-none" id="mobile-menu-btn">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <button id="home-tab-mobile" class="block w-full text-left font-medium text-gray-700 hover:text-blue-600 py-2 px-1 active-tab">Home</button>
+                <button id="about-tab-mobile" class="block w-full text-left font-medium text-gray-700 hover:text-blue-600 py-2 px-1">About Us</button>
+                <button id="services-tab-mobile" class="block w-full text-left font-medium text-gray-700 hover:text-blue-600 py-2 px-1">Services</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content Container -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Home Page -->
+        <div id="home-page" class="page-transition page-active">
+            <!-- Hero Section -->
+            <section class="py-12 md:py-20">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">Transforming Businesses with <span class="text-blue-600">Innovative Solutions</span></h1>
+                    <p class="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">We help companies of all sizes leverage cutting-edge technology to drive growth, improve efficiency, and achieve their strategic goals.</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-300">Get Started</button>
+                        <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-8 rounded-lg transition duration-300">Learn More</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="py-12">
+                <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">Why Choose Us</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-lightbulb text-blue-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Innovative Approach</h3>
+                        <p class="text-gray-600">We stay ahead of industry trends to provide forward-thinking solutions that give you a competitive edge.</p>
+                    </div>
                     
-                    // Validate the token with middleware
-                    await validateToken(response.token);
-                } else {
-                    showError(response.message || 'Login failed');
-                }
-            } catch (error) {
-                showError('Network error. Please try again.');
-            } finally {
-                hideLoading();
-            }
-        });
+                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-users text-green-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Expert Team</h3>
+                        <p class="text-gray-600">Our team of certified professionals brings years of experience across multiple industries and technologies.</p>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                        <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                            <i class="fas fa-headset text-purple-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">24/7 Support</h3>
+                        <p class="text-gray-600">We provide round-the-clock support to ensure your operations run smoothly at all times.</p>
+                    </div>
+                </div>
+            </section>
 
-        // Token validation middleware function
-        async function validateToken(token) {
-            showLoading();
-            
-            try {
-                // Simulate token validation with backend middleware
-                const isValid = await mockTokenValidationAPI(token);
-                
-                if (isValid) {
-                    // Token is valid, show dashboard
-                    showDashboard();
-                } else {
-                    // Token is invalid, clear storage and show login
-                    clearAuthData();
-                    showLogin();
-                    showError('Session expired. Please login again.');
-                }
-            } catch (error) {
-                showError('Token validation failed');
-                clearAuthData();
-                showLogin();
-            } finally {
-                hideLoading();
-            }
-        }
+            <!-- Stats Section -->
+            <section class="py-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl my-12">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <h3 class="text-4xl font-bold text-blue-600 mb-2">250+</h3>
+                        <p class="text-gray-700">Happy Clients</p>
+                    </div>
+                    <div>
+                        <h3 class="text-4xl font-bold text-blue-600 mb-2">500+</h3>
+                        <p class="text-gray-700">Projects Completed</p>
+                    </div>
+                    <div>
+                        <h3 class="text-4xl font-bold text-blue-600 mb-2">15+</h3>
+                        <p class="text-gray-700">Years Experience</p>
+                    </div>
+                    <div>
+                        <h3 class="text-4xl font-bold text-blue-600 mb-2">99%</h3>
+                        <p class="text-gray-700">Client Satisfaction</p>
+                    </div>
+                </div>
+            </section>
+        </div>
 
-        // Refresh token function
-        async function refreshToken() {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                showError('No token found');
-                return;
-            }
-            
-            showLoading();
-            
-            try {
-                // Simulate token refresh API call
-                const newToken = await mockTokenRefreshAPI(token);
-                
-                if (newToken) {
-                    localStorage.setItem('authToken', newToken);
-                    showDashboard();
-                    showError('Token refreshed successfully!', 'success');
-                } else {
-                    showError('Token refresh failed');
-                }
-            } catch (error) {
-                showError('Failed to refresh token');
-            } finally {
-                hideLoading();
-            }
-        }
+        <!-- About Us Page -->
+        <div id="about-page" class="page-transition hidden">
+            <!-- About Hero -->
+            <section class="py-12">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">About <span class="text-blue-600">Nexus Solutions</span></h1>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">We are a team of passionate innovators dedicated to helping businesses thrive in the digital age through technology and strategic thinking.</p>
+                </div>
 
-        // Logout function
-        function logout() {
-            clearAuthData();
-            showLogin();
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-        }
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
+                        <p class="text-gray-600 mb-6">Founded in 2010, Nexus Solutions began as a small startup with a big vision: to make advanced technology accessible to businesses of all sizes. What started as a three-person operation has grown into a trusted partner for over 250 companies worldwide.</p>
+                        <p class="text-gray-600 mb-6">Our journey has been guided by a commitment to excellence, innovation, and building lasting relationships with our clients. We believe that technology should empower people, not complicate their lives.</p>
+                        <p class="text-gray-600">Today, we continue to evolve, embracing new technologies and methodologies to deliver even greater value to our clients while staying true to our core values.</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl p-8 h-full">
+                        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Team collaboration" class="rounded-xl shadow-lg w-full h-auto">
+                    </div>
+                </div>
+            </section>
 
-        // Helper functions
-        function showLoading() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('loadingState').classList.remove('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
-        }
+            <!-- Values Section -->
+            <section class="py-12">
+                <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">Our Core Values</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-xl shadow-md border-l-4 border-blue-500">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Integrity</h3>
+                        <p class="text-gray-600">We believe in transparency, honesty, and doing what's right for our clients, even when no one is watching.</p>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-md border-l-4 border-green-500">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Innovation</h3>
+                        <p class="text-gray-600">We constantly explore new ideas and technologies to provide cutting-edge solutions that drive real results.</p>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-md border-l-4 border-purple-500">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Collaboration</h3>
+                        <p class="text-gray-600">We work as partners with our clients, listening to their needs and co-creating solutions that exceed expectations.</p>
+                    </div>
+                </div>
+            </section>
 
-        function hideLoading() {
-            document.getElementById('loadingState').classList.add('hidden');
-        }
+            <!-- Team Section -->
+            <section class="py-12">
+                <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">Meet Our Leadership</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900">Alex Johnson</h3>
+                            <p class="text-blue-600 mb-4">CEO & Founder</p>
+                            <p class="text-gray-600">With over 20 years in the tech industry, Alex leads our vision and strategic direction.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-r from-green-400 to-teal-500"></div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900">Maria Rodriguez</h3>
+                            <p class="text-blue-600 mb-4">Chief Technology Officer</p>
+                            <p class="text-gray-600">Maria oversees all technical operations and ensures we stay at the forefront of innovation.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="h-48 bg-gradient-to-r from-purple-400 to-pink-500"></div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-gray-900">David Chen</h3>
+                            <p class="text-blue-600 mb-4">Head of Client Success</p>
+                            <p class="text-gray-600">David ensures every client receives exceptional service and achieves their desired outcomes.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
-        function showDashboard() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('userEmail').textContent = `Email: ${localStorage.getItem('userEmail') || 'Unknown'}`;
-        }
+        <!-- Services Page -->
+        <div id="services-page" class="page-transition hidden">
+            <!-- Services Hero -->
+            <section class="py-12">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Our <span class="text-blue-600">Services</span></h1>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">We offer a comprehensive suite of services designed to address your business challenges and unlock new opportunities for growth.</p>
+                </div>
 
-        function showLogin() {
-            document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('dashboard').classList.add('hidden');
-            document.getElementById('loadingState').classList.add('hidden');
-        }
+                <!-- Services Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+                        <div class="h-3 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                        <div class="p-8">
+                            <div class="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-laptop-code text-blue-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Custom Software Development</h3>
+                            <p class="text-gray-600 mb-6">Tailored software solutions built to address your specific business needs, streamline operations, and drive efficiency.</p>
+                            <ul class="space-y-2 mb-6">
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Web Applications</li>
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Mobile Apps</li>
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Enterprise Systems</li>
+                            </ul>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">Learn More →</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+                        <div class="h-3 bg-gradient-to-r from-green-500 to-teal-600"></div>
+                        <div class="p-8">
+                            <div class="bg-green-100 w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-cloud text-green-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Cloud Solutions</h3>
+                            <p class="text-gray-600 mb-6">Migrate, optimize, and manage your infrastructure in the cloud for enhanced scalability, security, and cost-efficiency.</p>
+                            <ul class="space-y-2 mb-6">
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Cloud Migration</li>
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Infrastructure Management</li>
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> DevOps & Automation</li>
+                            </ul>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">Learn More →</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+                        <div class="h-3 bg-gradient-to-r from-purple-500 to-pink-600"></div>
+                        <div class="p-8">
+                            <div class="bg-purple-100 w-14 h-14 rounded-full flex items-center justify-center mb-6">
+                                <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-4">Data Analytics & AI</h3>
+                            <p class="text-gray-600 mb-6">Transform your data into actionable insights with advanced analytics, machine learning, and AI-powered solutions.</p>
+                            <ul class="space-y-2 mb-6">
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Business Intelligence</li>
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Predictive Analytics</li>
+                                <li class="flex items-center text-gray-600"><i class="fas fa-check text-green-500 mr-2"></i> Machine Learning Models</li>
+                            </ul>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">Learn More →</button>
+                        </div>
+                    </div>
+                </div>
 
-        function showError(message, type = 'error') {
-            const errorDiv = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            
-            errorText.textContent = message;
-            errorDiv.classList.remove('hidden');
-            
-            if (type === 'success') {
-                errorDiv.classList.remove('bg-red-50', 'border-red-200');
-                errorDiv.classList.add('bg-green-50', 'border-green-200');
-                errorText.classList.remove('text-red-800');
-                errorText.classList.add('text-green-800');
-            } else {
-                errorDiv.classList.remove('bg-green-50', 'border-green-200');
-                errorDiv.classList.add('bg-red-50', 'border-red-200');
-                errorText.classList.remove('text-green-800');
-                errorText.classList.add('text-red-800');
-            }
-            
-            // Auto-hide success messages after 3 seconds
-            if (type === 'success') {
-                setTimeout(() => {
-                    errorDiv.classList.add('hidden');
-                }, 3000);
-            }
-        }
-
-        function clearAuthData() {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userEmail');
-        }
-
-        // Mock API functions (Replace with actual API calls)
-        async function mockLoginAPI(email, password) {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Mock validation
-            if (email && password.length >= 6) {
-                return {
-                    success: true,
-                    token: 'mock-jwt-token-' + Date.now(),
-                    user: { email }
-                };
-            } else {
-                return {
-                    success: false,
-                    message: 'Invalid credentials'
-                };
-            }
-        }
-
-        async function mockTokenValidationAPI(token) {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            // Mock token validation
-            // In real implementation, this would call your backend middleware
-            return token && token.startsWith('mock-jwt-token');
-        }
-
-        async function mockTokenRefreshAPI(oldToken) {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            // Mock token refresh
-            // In real implementation, this would call your backend refresh endpoint
-            if (oldToken && oldToken.startsWith('mock-jwt-token')) {
-                return 'mock-jwt-token-refreshed-' + Date.now();
-            }
-            return null;
-        }
-    </script>
-</body>
-</html>
-<!-- update 1774959821.7824953 -->
+                <!-- Additional Services -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-
+<!-- update 1774963224.4073198 -->
