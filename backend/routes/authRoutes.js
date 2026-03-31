@@ -4,135 +4,128 @@ html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth Routes Documentation</title>
+    <title>Auth Routes Protection</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-800 p-6">
+<body class="bg-gray-50 min-h-screen p-6">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6 text-blue-700">Express Auth Routes Implementation</h1>
-        
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4">File: backend/routes/authRoutes.js</h2>
-            <p class="mb-4 text-gray-600">This file defines Express routes for authentication, including a login endpoint that validates credentials and returns a JWT token.</p>
-            
-            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-                <pre><code class="language-javascript">
-const express = require('express');
+        <header class="mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">Backend Route Protection</h1>
+            <p class="text-gray-600 mt-2">Middleware implementation for securing authentication routes</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Code Display Section -->
+            <div class="bg-gray-900 rounded-xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-white">authRoutes.js</h2>
+                    <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">Node.js</span>
+                </div>
+                <pre class="text-gray-300 text-sm overflow-x-auto">
+<code>const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../models/User'); // Assuming you have a User model
+const authController = require('../controllers/authController');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
-// Login endpoint
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
+// Public routes
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.post('/forgot-password', authController.forgotPassword);
+router.put('/reset-password/:resetToken', authController.resetPassword);
 
-        // Validate input
-        if (!email || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Email and password are required' 
-            });
-        }
+// Protected routes (require authentication)
+router.use(protect); // Apply protection middleware to all routes below
 
-        // Find user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Invalid credentials' 
-            });
-        }
+router.get('/me', authController.getMe);
+router.put('/updatedetails', authController.updateDetails);
+router.put('/updatepassword', authController.updatePassword);
+router.post('/logout', authController.logout);
 
-        // Validate password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Invalid credentials' 
-            });
-        }
+// Admin-only routes (require authentication + authorization)
+router.use(authorize('admin')); // Apply admin authorization middleware
 
-        // Create JWT token
-        const token = jwt.sign(
-            { 
-                userId: user._id, 
-                email: user.email,
-                role: user.role 
-            },
-            process.env.JWT_SECRET || 'your-secret-key',
-            { expiresIn: '24h' }
-        );
+router.get('/users', authController.getAllUsers);
+router.get('/users/:id', authController.getUser);
+router.put('/users/:id', authController.updateUser);
+router.delete('/users/:id', authController.deleteUser);
 
-        // Return success response with token
-        res.status(200).json({
-            success: true,
-            message: 'Login successful',
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                role: user.role
-            }
-        });
+module.exports = router;</code>
+                </pre>
+            </div>
 
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Server error during authentication' 
-        });
-    }
-});
+            <!-- Middleware Explanation -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Middleware Protection</h2>
+                
+                <div class="space-y-6">
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <h3 class="font-medium text-gray-700">Protect Middleware</h3>
+                        <p class="text-gray-600 text-sm mt-1">Verifies JWT token from Authorization header and attaches user to request object.</p>
+                    </div>
 
-// Optional: Token verification endpoint
-router.post('/verify', (req, res) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        
-        if (!token) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'No token provided' 
-            });
-        }
+                    <div class="border-l-4 border-green-500 pl-4">
+                        <h3 class="font-medium text-gray-700">Authorize Middleware</h3>
+                        <p class="text-gray-600 text-sm mt-1">Checks user roles and permissions before granting access to specific routes.</p>
+                    </div>
 
-        const decoded = jwt.verify(
-            token, 
-            process.env.JWT_SECRET || 'your-secret-key'
-        );
-        
-        res.status(200).json({
-            success: true,
-            message: 'Token is valid',
-            user: decoded
-        });
-    } catch (error) {
-        res.status(401).json({ 
-            success: false, 
-            message: 'Invalid or expired token' 
-        });
-    }
-});
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-medium text-yellow-800">Route Protection Levels</h4>
+                        <ul class="text-sm text-yellow-700 mt-2 space-y-1">
+                            <li>• Public: No authentication required</li>
+                            <li>• Protected: Valid JWT token required</li>
+                            <li>• Admin: Admin role required</li>
+                        </ul>
+                    </div>
 
-module.exports = router;
-                </code></pre>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-700">Implementation Notes</h4>
+                        <ul class="text-sm text-gray-600 mt-2 space-y-1">
+                            <li>• Use router.use() for applying middleware to multiple routes</li>
+                            <li>• Order matters - middleware executes sequentially</li>
+                            <li>• Combine protect and authorize for role-based access</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-xl font-semibold mb-3">Implementation Notes:</h3>
-            <ul class="list-disc pl-5 space-y-2 text-gray-600">
-                <li>Requires <code class="bg-gray-100 px-1 rounded">jsonwebtoken</code>, <code class="bg-gray-100 px-1 rounded">bcryptjs</code>, and <code class="bg-gray-100 px-1 rounded">express</code> packages</li>
-                <li>Assumes a User model with email, password (hashed), name, and role fields</li>
-                <li>Uses environment variable <code class="bg-gray-100 px-1 rounded">JWT_SECRET</code> for token signing</li>
-                <li>Includes input validation and error handling</li>
-                <li>Returns user information (excluding password) in the response</li>
-                <li>Token expires in 24 hours (configurable)</li>
-            </ul>
+        <!-- Route Examples -->
+        <div class="mt-8 bg-white rounded-xl p-6 shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Route Examples</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <span class="font-medium text-gray-700">Public Route</span>
+                    </div>
+                    <p class="text-sm text-gray-600">POST /api/auth/login</p>
+                    <p class="text-xs text-gray-500 mt-1">No token required</p>
+                </div>
+
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                        <span class="font-medium text-gray-700">Protected Route</span>
+                    </div>
+                    <p class="text-sm text-gray-600">GET /api/auth/me</p>
+                    <p class="text-xs text-gray-500 mt-1">Valid JWT required</p>
+                </div>
+
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        <span class="font-medium text-gray-700">Admin Route</span>
+                    </div>
+                    <p class="text-sm text-gray-600">GET /api/auth/users</p>
+                    <p class="text-xs text-gray-500 mt-1">Admin role required</p>
+                </div>
+            </div>
         </div>
+
+        <footer class="mt-10 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm">
+            <p>Middleware-based route protection for secure authentication system</p>
+        </footer>
     </div>
 </body>
 </html>
+<!-- update 1774960425.3766453 -->
